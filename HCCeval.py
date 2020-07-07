@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys, pandas as pd, numpy as np, logging, sysv_ipc
-import argparse
+import click
 from sklearn.metrics import silhouette_score, normalized_mutual_info_score
 import matplotlib
 matplotlib.use('Agg')
@@ -54,15 +54,6 @@ def get_silhouette2(data) :
     else :
         return 0.
 
-def get_args(args) :
-    parser = argparse.ArgumentParser(description='''evalHCC evaluates HierCC results using varied statistic summaries.''', formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-p', '--profile', help='[INPUT; REQUIRED] name of the profile file. Can be GZIPed.', required=True)
-    parser.add_argument('-c', '--cluster', help='[INPUT; REQUIRED] name of the hierCC file. Can be GZIPed.', required=True)
-    parser.add_argument('-o', '--output', help='[OUTPUT; REQUIRED] Prefix for the output files.', required=True)
-    parser.add_argument('-s', '--stepwise', help='[DEFAULT: 10] Evaluate every <stepwise> levels.', default=10, type=int)
-
-    return parser.parse_args(args)    
-
 def prepare_mat(profile_file) :
     mat = pd.read_csv(profile_file, sep='\t', header=None, dtype=str).values
     allele_columns = np.array([i == 0 or (not h.startswith('#')) for i, h in enumerate(mat[0])])
@@ -71,35 +62,37 @@ def prepare_mat(profile_file) :
     return mat
 
 
-def evalHCC(args) :
-    args = get_args(args)
-    pool = Pool(10)
+@click.command()
+@click.option('-p', '--profile', help='[INPUT; REQUIRED] name of the profile file. Can be GZIPed.', required=True)
+@click.option('-c', '--cluster', help='[INPUT; REQUIRED] name of the HierCC file. Can be GZIPed.', required=True)
+@click.option('-o', '--output', help='[OUTPUT; REQUIRED] Prefix for the output files.', required=True)
+@click.option('-s', '--stepwise', help='[DEFAULT: 10] Evaluate every <stepwise> levels.', default=10, type=int)
+@click.option('-n', '--n_proc', help='[DEFAULT: 4] Number of processors.', default=4, type=int)
+def evalHCC(profile, cluster, output, stepwise, n_proc) :
+    '''evalHCC evaluates HierCC results using varied statistic summaries.'''
+    pool = Pool(n_proc)
 
-    profile = prepare_mat(args.profile)
-    cluster = prepare_mat(args.cluster)
+    profile = prepare_mat(profile)
+    cluster = prepare_mat(cluster)
 
     idx = { p:i for i, p in enumerate(profile.T[0])}
     cluster_idx = sorted([ [idx.get(c, -1), i] for i, c in enumerate(cluster.T[0]) if c in idx ])
     cluster = cluster[np.array(cluster_idx).T[1]]
     assert cluster.shape[0] == profile.shape[0], 'some profiles do not have corresponding cluster info'
-    cluster = cluster[:, 1::args.stepwise]
+    cluster = cluster[:, 1::stepwise]
 
-    silhouette = get_silhouette(profile, cluster, args.stepwise, pool)
-    similarity = get_similarity(normalized_mutual_info_score, cluster, args.stepwise, pool)
+    silhouette = get_silhouette(profile, cluster, stepwise, pool)
+    similarity = get_similarity(normalized_mutual_info_score, cluster, stepwise, pool)
 
-    #np.savez_compressed('test.npz', silhouette=silhouette, similarity=similarity)
-    #data = np.load('test.npz')
-    #silhouette, similarity = data['silhouette'], data['similarity']
-
-    with open(args.output+'.tsv', 'w') as fout:
-        levels = ['HC{0}'.format(lvl*args.stepwise) for lvl in np.arange(silhouette.shape[0])]
+    with open(output+'.tsv', 'w') as fout:
+        levels = ['HC{0}'.format(lvl*stepwise) for lvl in np.arange(silhouette.shape[0])]
         for lvl, ss in zip(levels, silhouette) :
             fout.write('#Silhouette\t{0}\t{1}\n'.format(lvl, ss))
 
         fout.write('\n#NMI\t{0}\n'.format('\t'.join(levels)))
         for lvl, nmis in zip(levels, similarity):
             fout.write('{0}\t{1}\n'.format(lvl, '\t'.join([ '{0:.3f}'.format(nmi) for nmi in nmis ])))
-    fig, axs = plt.subplots(2, 2, #sharex='col', \
+    fig, axs = plt.subplots(2, 2, \
                             figsize=(8, 12), \
                             gridspec_kw={'width_ratios':(12, 1),
                                          'height_ratios': (65, 35)})
@@ -107,11 +100,11 @@ def evalHCC(args) :
     heatplot = axs[0, 0].imshow( (10*(np.log10(1-similarity))), \
                                 norm=colors.TwoSlopeNorm(vmin=-30., vcenter=-10., vmax=0), \
                                 cmap = 'RdBu',\
-                                extent=[0, silhouette.shape[0]*args.stepwise, \
-                                        silhouette.shape[0]*args.stepwise, 0])
+                                extent=[0, silhouette.shape[0]*stepwise, \
+                                        silhouette.shape[0]*stepwise, 0])
     cb = fig.colorbar(heatplot, cax=axs[0, 1])
-    axs[1, 0].plot(np.arange(silhouette.shape[0])*args.stepwise, silhouette,)
-    axs[1, 0].set_xlim([0, silhouette.shape[0]*args.stepwise])
+    axs[1, 0].plot(np.arange(silhouette.shape[0])*stepwise, silhouette,)
+    axs[1, 0].set_xlim([0, silhouette.shape[0]*stepwise])
     axs[1, 1].remove()
     axs[0, 0].set_ylabel('HCs (allelic distances)')
     axs[0, 0].set_xlabel('HCs (allelic distances)')
@@ -120,9 +113,9 @@ def evalHCC(args) :
     cb.set_label('Normalized Mutual Information')
     cb.set_ticks([-30, -23.01, -20, -13.01, -10, -3.01, 0])
     cb.ax.set_yticklabels(['>=.999', '.995', '.99', '.95', '.9', '.5', '.0'])
-    plt.savefig(args.output+'.pdf')
-    logging.info('Tab delimited evaluation is save in {0}.tsv'.format(args.output))
-    logging.info('Graphic visualisation is save in {0}.pdf'.format(args.output))
+    plt.savefig(output+'.pdf')
+    logging.info('Tab delimited evaluation is save in {0}.tsv'.format(output))
+    logging.info('Graphic visualisation is save in {0}.pdf'.format(output))
 
 if __name__ == '__main__' :
-    evalHCC(sys.argv[1:])
+    evalHCC()

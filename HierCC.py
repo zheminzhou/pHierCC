@@ -14,7 +14,7 @@
 # 2 1 2
 # ...
 
-import sys, gzip, argparse, logging
+import sys, gzip, logging, click
 import pandas as pd, numpy as np
 from multiprocessing import Pool
 from scipy.spatial import distance as ssd
@@ -27,20 +27,6 @@ except :
 logging.basicConfig(format='%(asctime)s | %(message)s',stream=sys.stdout, level=logging.INFO)
 
 
-def get_args(args):
-    parser = argparse.ArgumentParser(description='''HierCC takes allelic profile (as in https://pubmlst.org/data/) and
-work out hierarchical clusters of all the profiles based on a minimum-spanning tree.''',
-                                     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-p', '--profile', help='[INPUT; REQUIRED] name of the profile file. Can be GZIPed.',
-                        required=True)
-    parser.add_argument('-o', '--output',
-                        help='[OUTPUT; REQUIRED] Prefix for the output files. These include a NUMPY and TEXT verions of the same clustering result',
-                        required=True)
-    parser.add_argument('-a', '--append', help='[INPUT; optional] The NUMPY version of an existing HierCC result',
-                        default='')
-    return parser.parse_args(args)
-
-
 def prepare_mat(profile_file) :
     mat = pd.read_csv(profile_file, sep='\t', header=None, dtype=str).values
     allele_columns = np.array([i == 0 or (not h.startswith('#')) for i, h in enumerate(mat[0])])
@@ -48,12 +34,21 @@ def prepare_mat(profile_file) :
     mat = mat[mat.T[0]>0]
     return mat
 
+@click.command()
+@click.option('-p', '--profile', help='[INPUT; REQUIRED] name of the profile file. Can be GZIPed.',
+                        required=True)
+@click.option('-o', '--output',
+                        help='[OUTPUT; REQUIRED] Prefix for the output files. These include a NUMPY and TEXT verions of the same clustering result',
+                        required=True)
+@click.option('-a', '--append', help='[INPUT; optional] The NUMPY version of an existing HierCC result',
+                        default='')
+@click.option('-n', '--n_proc', help='[DEFAULT: 4] Number of processors.', default=4, type=int)
+def hierCC(profile, output, append, n_proc):
+    '''HierCC takes allelic profile (as in https://pubmlst.org/data/) and
+    work out hierarchical clusters of all the profiles based on a minimum-spanning tree.'''
+    pool = Pool(n_proc)
 
-def hierCC(args):
-    params = get_args(args)
-    pool = Pool(10)
-
-    profile_file, cluster_file, old_cluster = params.profile, params.output + '.npz', params.append
+    profile_file, cluster_file, old_cluster = profile, output + '.npz', append
 
     mat = prepare_mat(profile_file)
     n_loci = mat.shape[1] - 1
@@ -64,7 +59,7 @@ def hierCC(args):
     logging.info('Start hierCC assignments')
 
     # prepare existing clusters
-    if not params.append:
+    if not append:
         absence = np.sum(mat <= 0, 1)
         mat[:] = mat[np.argsort(absence, kind='mergesort')]
         typed = {}
@@ -85,7 +80,7 @@ def hierCC(args):
     res.T[0] = mat.T[0]
     logging.info('Calculate distance matrix')
     # prepare existing tree
-    if params.append :
+    if append :
         for r in res :
             if r[0] in typed :
                 r[:] = cls[typed[r[0]]]
@@ -116,13 +111,13 @@ def hierCC(args):
     res.T[0] = mat.T[0]
     np.savez_compressed(cluster_file, hierCC=res)
 
-    with gzip.open(params.output + '.hierCC.gz', 'wt') as fout:
+    with gzip.open(output + '.hierCC.gz', 'wt') as fout:
         fout.write('#ST_id\t{0}\n'.format('\t'.join(['HC' + str(id) for id in np.arange(n_loci+1)])))
         for r in res[np.argsort(res.T[0])]:
             fout.write('\t'.join([str(rr) for rr in r]) + '\n')
 
-    logging.info('NUMPY clustering result (for incremental hierCC): {0}.npz'.format(params.output))
-    logging.info('TEXT  clustering result (for visual inspection): {0}.hierCC.gz'.format(params.output))
+    logging.info('NUMPY clustering result (for incremental hierCC): {0}.npz'.format(output))
+    logging.info('TEXT  clustering result (for visual inspection): {0}.hierCC.gz'.format(output))
 
 
 if __name__ == '__main__':
