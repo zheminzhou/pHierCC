@@ -10,10 +10,8 @@ import matplotlib.colors as colors
 from multiprocessing import Pool
 try :
     from getDistance import getDistance
-    from heatmap import heatmap
 except :
     from .getDistance import getDistance
-    from .heatmap import heatmap
 
 logging.basicConfig(format='%(asctime)s | %(message)s',stream=sys.stdout, level=logging.INFO)
 
@@ -46,8 +44,8 @@ def get_silhouette(profile, cluster, stepwise, pool) :
 
 def get_silhouette2(data) :
     dist_key, dist_shape, tag = data
-    s = np.unique(tag).size
-    if 2 <= s < tag.shape[0] :
+    s = np.unique(tag)
+    if 2 <= s.size < tag.shape[0] :
         dist_buf = sysv_ipc.SharedMemory(dist_key)
         dist = np.ndarray(dist_shape, dtype=np.int32, buffer=memoryview(dist_buf))
         ss = silhouette_score(dist.astype(float), tag, metric = 'precomputed')
@@ -108,7 +106,7 @@ def evalHCC(args) :
 
     heatplot = axs[0, 0].imshow( (10*(np.log10(1-similarity))), \
                                 norm=colors.TwoSlopeNorm(vmin=-30., vcenter=-10., vmax=0), \
-                                cmap = 'RdYlBu',\
+                                cmap = 'RdBu',\
                                 extent=[0, silhouette.shape[0]*args.stepwise, \
                                         silhouette.shape[0]*args.stepwise, 0])
     cb = fig.colorbar(heatplot, cax=axs[0, 1])

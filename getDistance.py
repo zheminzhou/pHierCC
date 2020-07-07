@@ -56,7 +56,7 @@ def syn_dist(mat, s, e, dist, start=0):
                         al += 1
                         if mat[i, k] != mat[j, k] :
                             ad += 1
-            ll = n_loci - max(0.03 * n_loci, 3*(n_loci - max(rl, ql)))
+            ll = max(ql, rl) - 0.03 * n_loci
             if ll > al :
                 ad += ll - al
                 al = ll
@@ -75,7 +75,7 @@ def asyn_dist(mat, s, e, dist, start=0):
                         al += 1
                         if mat[i, k] != mat[j, k] :
                             ad += 1
-            ll = n_loci - max(0.03 * n_loci, 3*(n_loci - ql))
+            ll = ql - 0.03 * n_loci
             if ll > al :
                 ad += ll - al
                 al = ll
