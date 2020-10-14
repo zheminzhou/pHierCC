@@ -78,7 +78,10 @@ def evalHCC(profile, cluster, output, stepwise, n_proc) :
     idx = { p:i for i, p in enumerate(profile.T[0])}
     cluster_idx = sorted([ [idx.get(c, -1), i] for i, c in enumerate(cluster.T[0]) if c in idx ])
     cluster = cluster[np.array(cluster_idx).T[1]]
-    assert cluster.shape[0] == profile.shape[0], 'some profiles do not have corresponding cluster info'
+
+    idx = { p:i for i, p in enumerate(cluster.T[0])}
+    cluster_idx = sorted([ [idx.get(c, -1), i] for i, c in enumerate(profile.T[0]) if c in idx ])
+    profile = profile[np.array(cluster_idx).T[1]]
     cluster = cluster[:, 1::stepwise]
 
     silhouette = get_silhouette(profile, cluster, stepwise, pool)

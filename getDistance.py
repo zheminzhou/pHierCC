@@ -60,7 +60,10 @@ def syn_dist(mat, s, e, dist, start=0):
             if ll > al :
                 ad += ll - al
                 al = ll
-            dist[i-start, j] = int(ad/al * n_loci + 0.5)
+            if al > 0 :
+                dist[i-start, j] = int(ad/al * n_loci + 0.5)
+            else :
+                dist[i-start, j] = int(n_loci)
 
 @nb.jit(nopython=True)
 def asyn_dist(mat, s, e, dist, start=0):
@@ -79,7 +82,10 @@ def asyn_dist(mat, s, e, dist, start=0):
             if ll > al :
                 ad += ll - al
                 al = ll
-            dist[i-start, j] = int(ad/al * n_loci + 0.5)
+            if al > 0 :
+                dist[i-start, j] = int(ad/al * n_loci + 0.5)
+            else :
+                dist[i-start, j] = int(n_loci)
 
 @nb.jit(nopython=True)
 def p_dist(mat, s, e, dist, start=0):
