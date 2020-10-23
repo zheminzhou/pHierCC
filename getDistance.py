@@ -1,22 +1,23 @@
-import sysv_ipc, numpy as np, numba as nb
+import numpy as np, numba as nb
+from multiprocessing import shared_memory
 
 class getDistance(object) :
     def __init__(self, data, func_name, pool, start=0):
         func = eval(func_name)
-        self.mat_buf = sysv_ipc.SharedMemory(None, sysv_ipc.IPC_CREX, size=data.nbytes)
-        mat = np.ndarray(data.shape, dtype=data.dtype, buffer=memoryview(self.mat_buf))
+        self.mat_buf = shared_memory.SharedMemory(create=True, size=data.nbytes)
+        mat = np.ndarray(data.shape, dtype=data.dtype, buffer=self.mat_buf.buf)
         mat[:] = data[:]
-        self.dist_buf = sysv_ipc.SharedMemory(None, sysv_ipc.IPC_CREX, size=int((mat.shape[0] - start) * mat.shape[0] * 4))
-        self.dist = np.ndarray([mat.shape[0] - start, mat.shape[0]], dtype=np.int32, buffer=memoryview(self.dist_buf))
+        self.dist_buf = shared_memory.SharedMemory(create=True, size=int((mat.shape[0] - start) * mat.shape[0] * 4))
+        self.dist = np.ndarray([mat.shape[0] - start, mat.shape[0]], dtype=np.int32, buffer=self.dist_buf.buf)
         self.dist[:] = 0
         parallel_dist(self.mat_buf, func, self.dist_buf, mat.shape, pool, start)
-        self.mat_buf.detach()
-        self.mat_buf.remove()
+        self.mat_buf.close()
+        self.mat_buf.unlink()
     def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.dist_buf.detach()
-        self.dist_buf.remove()
+        self.dist_buf.close()
+        self.dist_buf.unlink()
         return
 
 
@@ -29,18 +30,18 @@ def parallel_dist(mat_buf, func, dist_buf, mat_shape, pool, start=0) :
         indices.append([s, e])
         s = e
     indices = (np.array(indices)+0.5).astype(int)
-    for _ in pool.imap_unordered(dist_wrapper, [[func, mat_buf.key, dist_buf.key, mat_shape, s, e, start] for s, e in indices ]) :
+    for _ in pool.imap_unordered(dist_wrapper, [[func, mat_buf.name, dist_buf.name, mat_shape, s, e, start] for s, e in indices ]) :
         pass
 
 def dist_wrapper(data) :
     func, mat_buf_id, dist_buf_id, mat_shape, s, e, start = data
-    mat_buf = sysv_ipc.SharedMemory(mat_buf_id)
-    dist_buf = sysv_ipc.SharedMemory(dist_buf_id)
-    mat = np.ndarray(mat_shape, dtype=int, buffer=memoryview(mat_buf))
-    dist = np.ndarray([mat_shape[0]-start, mat_shape[0]], dtype=np.int32, buffer=memoryview(dist_buf))
+    mat_buf = shared_memory.SharedMemory(name=mat_buf_id, create=False)
+    dist_buf = shared_memory.SharedMemory(name=dist_buf_id, create=False)
+    mat = np.ndarray(mat_shape, dtype=int, buffer=mat_buf.buf)
+    dist = np.ndarray([mat_shape[0]-start, mat_shape[0]], dtype=np.int32, buffer=dist_buf.buf)
     func(mat[:, 1:], s, e, dist, start)
-    mat_buf.detach()
-    dist_buf.detach()
+    mat_buf.close()
+    dist_buf.close()
 
 @nb.jit(nopython=True)
 def syn_dist(mat, s, e, dist, start=0):

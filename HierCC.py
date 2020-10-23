@@ -16,7 +16,7 @@
 
 import sys, gzip, logging, click
 import pandas as pd, numpy as np
-from multiprocessing import Pool
+from multiprocessing import Pool, set_start_method
 from scipy.spatial import distance as ssd
 from scipy.cluster.hierarchy import linkage
 try :
@@ -25,7 +25,6 @@ except :
     from .getDistance import getDistance
 
 logging.basicConfig(format='%(asctime)s | %(message)s',stream=sys.stdout, level=logging.INFO)
-
 
 def prepare_mat(profile_file) :
     mat = pd.read_csv(profile_file, sep='\t', header=None, dtype=str).values
@@ -107,7 +106,7 @@ def hierCC(profile, output, append, n_proc):
                 min_d = d[i]
                 if r[min_d + 1] > res[i, min_d + 1]:
                     r[min_d + 1:] = res[i, min_d + 1:]
-    pool.close()
+    #pool.close()
     res.T[0] = mat.T[0]
     np.savez_compressed(cluster_file, hierCC=res)
 
@@ -118,8 +117,9 @@ def hierCC(profile, output, append, n_proc):
 
     logging.info('NUMPY clustering result (for incremental hierCC): {0}.npz'.format(output))
     logging.info('TEXT  clustering result (for visual inspection): {0}.hierCC.gz'.format(output))
-
+    pool.close()
 
 if __name__ == '__main__':
+    set_start_method('spawn')
     hierCC(sys.argv[1:])
 
