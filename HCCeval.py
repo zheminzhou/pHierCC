@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
-import sys, pandas as pd, numpy as np, logging, sysv_ipc
+import sys, pandas as pd, numpy as np, logging
 import click
 from sklearn.metrics import silhouette_score, normalized_mutual_info_score
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-from multiprocessing import Pool
+from multiprocessing import Pool, shared_memory
+from multiprocessing.managers import SharedMemoryManager
+
 try :
     from getDistance import getDistance
 except :
@@ -37,19 +39,22 @@ def get_similarity(method, cluster, stepwise, pool) :
 def get_silhouette(profile, cluster, stepwise, pool) :
     logging.info('Calculating pairwise distance ...')
     with getDistance(profile, 'p_dist', pool) as dist :
-        dist.dist += dist.dist.T
+        dist.dist = dist.dist[:, :, 0] + dist.dist[:, :, 0].T
         logging.info('Calculating Silhouette score ...')
-        silhouette = np.array(pool.map(get_silhouette2, [ [dist.dist_buf.key, dist.dist.shape, tag] for tag in cluster.T ]))
+        with SharedMemoryManager() as smm:
+            dist_buf = smm.SharedMemory(size=dist.dist.nbytes)
+            dist2 = np.ndarray(dist.dist.shape, dtype=dist.dist.dtype, buffer=dist_buf.buf)
+            dist2[:] = dist.dist[:]
+            silhouette = np.array(pool.map(get_silhouette2, [ [dist_buf.name, dist.dist.shape, tag] for tag in cluster.T ]))
     return silhouette
 
 def get_silhouette2(data) :
     dist_key, dist_shape, tag = data
     s = np.unique(tag)
     if 2 <= s.size < tag.shape[0] :
-        dist_buf = sysv_ipc.SharedMemory(dist_key)
-        dist = np.ndarray(dist_shape, dtype=np.int32, buffer=memoryview(dist_buf))
+        dist_buf = shared_memory.SharedMemory(dist_key)
+        dist = np.ndarray(dist_shape, dtype=np.int32, buffer=dist_buf.buf)
         ss = silhouette_score(dist.astype(float), tag, metric = 'precomputed')
-        dist_buf.detach()
         return ss
     else :
         return 0.
@@ -84,8 +89,8 @@ def evalHCC(profile, cluster, output, stepwise, n_proc) :
     profile = profile[np.array(cluster_idx).T[1]]
     cluster = cluster[:, 1::stepwise]
 
-    silhouette = get_silhouette(profile, cluster, stepwise, pool)
     similarity = get_similarity(normalized_mutual_info_score, cluster, stepwise, pool)
+    silhouette = get_silhouette(profile, cluster, stepwise, pool)
 
     with open(output+'.tsv', 'w') as fout:
         levels = ['HC{0}'.format(lvl*stepwise) for lvl in np.arange(silhouette.shape[0])]
@@ -119,6 +124,7 @@ def evalHCC(profile, cluster, output, stepwise, n_proc) :
     plt.savefig(output+'.pdf')
     logging.info('Tab delimited evaluation is save in {0}.tsv'.format(output))
     logging.info('Graphic visualisation is save in {0}.pdf'.format(output))
+    pool.close()
 
 if __name__ == '__main__' :
     evalHCC()

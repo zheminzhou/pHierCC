@@ -79,34 +79,33 @@ def hierCC(profile, output, append, n_proc):
     res.T[0] = mat.T[0]
     logging.info('Calculate distance matrix')
     # prepare existing tree
-    if append :
-        for r in res :
-            if r[0] in typed :
-                r[:] = cls[typed[r[0]]]
-    else :
-        with getDistance(mat, 'syn_dist', pool, start) as dist :
-            dist.dist += dist.dist.T
+    with getDistance(mat, 'dual_dist', pool, start) as dist:
+        if append :
+            for r in res :
+                if r[0] in typed :
+                    r[:] = cls[typed[r[0]]]
+        else :
+            dist.dist[:, :, 0] += dist.dist[:, :, 0].T
             logging.info('Start Single linkage clustering')
-            slc = linkage(ssd.squareform(dist.dist), method='single')
+            slc = linkage(ssd.squareform(dist.dist[:, :, 0]), method='single')
 
-        index = { s:i for i, s in enumerate(mat.T[0]) }
-        descendents = [ [m] for m in mat.T[0] ] + [None for _ in np.arange(mat.shape[0]-1)]
-        for idx, c in enumerate(slc.astype(int)) :
-            n_id = idx + mat.shape[0]
-            d = sorted([int(c[0]), int(c[1])], key=lambda x:descendents[x][0])
-            min_id = min(descendents[d[0]])
-            descendents[n_id] = descendents[d[0]] + descendents[d[1]]
-            for tgt in descendents[d[1]] :
-                res[index[tgt], c[2]+1:] = res[index[min_id], c[2]+1:]
-    logging.info('Attach genomes onto the tree.')
-    with getDistance(mat, 'asyn_dist', pool, start) as dist :
-        for id, (r, d) in enumerate(zip(res[start:], dist.dist)):
+            index = { s:i for i, s in enumerate(mat.T[0]) }
+            descendents = [ [m] for m in mat.T[0] ] + [None for _ in np.arange(mat.shape[0]-1)]
+            for idx, c in enumerate(slc.astype(int)) :
+                n_id = idx + mat.shape[0]
+                d = sorted([int(c[0]), int(c[1])], key=lambda x:descendents[x][0])
+                min_id = min(descendents[d[0]])
+                descendents[n_id] = descendents[d[0]] + descendents[d[1]]
+                for tgt in descendents[d[1]] :
+                    res[index[tgt], c[2]+1:] = res[index[min_id], c[2]+1:]
+
+        logging.info('Attach genomes onto the tree.')
+        for id, (r, d) in enumerate(zip(res[start:], dist.dist[:, :, 1])):
             if id + start > 0 :
                 i = np.argmin(d[:id+start])
                 min_d = d[i]
                 if r[min_d + 1] > res[i, min_d + 1]:
                     r[min_d + 1:] = res[i, min_d + 1:]
-    #pool.close()
     res.T[0] = mat.T[0]
     np.savez_compressed(cluster_file, hierCC=res)
 
