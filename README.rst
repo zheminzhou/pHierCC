@@ -4,7 +4,7 @@
 
 Hosted by
 
-.. image:: https://warwick.ac.uk/fac/sci/med/research/biomedical/mi/enterobase/enterobase.jpg
+.. image:: https://warwick.ac.uk/fac/sci/med/research/biomedical/mi/enterobase/enterobase.jpg?maxWidth=300
    :alt: The EnteroBase Website
    :target: https://enterobase.warwick.ac.uk
 
