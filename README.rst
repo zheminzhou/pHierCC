@@ -3,6 +3,7 @@
    :target: https://pypi.python.org/pypi/hiercc
 
 Hosted by
+
 .. image:: https://warwick.ac.uk/fac/sci/med/research/biomedical/mi/enterobase/enterobase.jpg
    :alt: The EnteroBase Website
    :target: https://enterobase.warwick.ac.uk
