@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-import sys, pandas as pd, numpy as np, logging
+import os, sys, pandas as pd, numpy as np, logging
 import click
 from sklearn.metrics import silhouette_score, normalized_mutual_info_score
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-from multiprocessing import Pool, shared_memory
-from multiprocessing.managers import SharedMemoryManager
+from multiprocessing import Pool
+import SharedArray as sa
+from tempfile import NamedTemporaryFile
 
 try :
     from getDistance import getDistance
@@ -38,22 +39,22 @@ def get_similarity(method, cluster, stepwise, pool) :
 
 def get_silhouette(profile, cluster, stepwise, pool) :
     logging.info('Calculating pairwise distance ...')
-    with getDistance(profile, 'p_dist', pool) as dist :
-        dist.dist = dist.dist[:, :, 0] + dist.dist[:, :, 0].T
+    dist = getDistance(profile, 'p_dist', pool)
+    with NamedTemporaryFile(dir='.', prefix='HCCeval_') as file :
+        dist_buf = 'file://{0}.dist'.format(file.name)
+        dist2 = sa.create(dist_buf, dist.shape[:2], dist.dtype)
+        dist2[:] = dist[:, :, 0] + dist[:, :, 0].T
+        del dist
         logging.info('Calculating Silhouette score ...')
-        with SharedMemoryManager() as smm:
-            dist_buf = smm.SharedMemory(size=dist.dist.nbytes)
-            dist2 = np.ndarray(dist.dist.shape, dtype=dist.dist.dtype, buffer=dist_buf.buf)
-            dist2[:] = dist.dist[:]
-            silhouette = np.array(pool.map(get_silhouette2, [ [dist_buf.name, dist.dist.shape, tag] for tag in cluster.T ]))
+        silhouette = np.array(pool.map(get_silhouette2, [ [dist_buf, tag] for tag in cluster.T ]))
+        sa.delete(dist_buf)
     return silhouette
 
 def get_silhouette2(data) :
-    dist_key, dist_shape, tag = data
+    dist_buf, tag = data
     s = np.unique(tag)
     if 2 <= s.size < tag.shape[0] :
-        dist_buf = shared_memory.SharedMemory(dist_key)
-        dist = np.ndarray(dist_shape, dtype=np.int32, buffer=dist_buf.buf)
+        dist = sa.attach(dist_buf)
         ss = silhouette_score(dist.astype(float), tag, metric = 'precomputed')
         return ss
     else :

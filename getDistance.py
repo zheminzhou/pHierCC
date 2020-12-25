@@ -1,30 +1,25 @@
-import numpy as np, numba as nb
-from multiprocessing import shared_memory
-from multiprocessing.managers import SharedMemoryManager
+import numpy as np, numba as nb, os
+from tempfile import NamedTemporaryFile
+import SharedArray as sa
 
-class getDistance(object) :
-    def __init__(self, data, func_name, pool, start=0):
+def getDistance(data, func_name, pool, start=0):
+    with NamedTemporaryFile(dir='.', prefix='HCC_') as file :
+        prefix = 'file://{0}'.format(file.name)
         func = eval(func_name)
-        with SharedMemoryManager() as smm :
-            self.mat_buf = smm.SharedMemory(size=data.nbytes)
-            mat = np.ndarray(data.shape, dtype=data.dtype, buffer=self.mat_buf.buf)
-            mat[:] = data[:]
-            self.dist_buf = smm.SharedMemory(size=int((mat.shape[0] - start) * mat.shape[0] * 4 * 2))
-            self.dist = np.ndarray([mat.shape[0] - start, mat.shape[0], 2], dtype=np.int32, buffer=self.dist_buf.buf)
-            self.dist[:] = 0
-            parallel_dist(self.mat_buf, func, self.dist_buf, mat.shape, pool, start)
-
-    def __enter__(self):
-        return self
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        #self.mat_buf.close()
-        #self.mat_buf.unlink()
-        #self.dist_buf.close()
-        #self.dist_buf.unlink()
-        return
+        mat_buf = '{0}.mat.sa'.format(prefix)
+        mat = sa.create(mat_buf, shape = data.shape, dtype = data.dtype)
+        mat[:] = data[:]
+        dist_buf = '{0}.dist.sa'.format(prefix)
+        dist = sa.create(dist_buf, shape = [mat.shape[0] - start, mat.shape[0], 2], dtype = np.int32)
+        dist[:] = 0
+        __parallel_dist(mat_buf, func, dist_buf, mat.shape, pool, start)
+        sa.delete(mat_buf)
+        os.unlink(dist_buf[7:])
+    return dist
 
 
-def parallel_dist(mat_buf, func, dist_buf, mat_shape, pool, start=0) :
+
+def __parallel_dist(mat_buf, func, dist_buf, mat_shape, pool, start=0) :
     n_pool = len(pool._pool)
     tot_cmp = (mat_shape[0] * mat_shape[0] - start * start)/n_pool
     s, indices = start, []
@@ -33,17 +28,16 @@ def parallel_dist(mat_buf, func, dist_buf, mat_shape, pool, start=0) :
         indices.append([s, e])
         s = e
     indices = (np.array(indices)+0.5).astype(int)
-    for _ in pool.imap_unordered(dist_wrapper, [[func, mat_buf.name, dist_buf.name, mat_shape, s, e, start] for s, e in indices ]) :
+    for _ in pool.imap_unordered(__dist_wrapper, [[func, mat_buf, dist_buf, s, e, start] for s, e in indices ]) :
         pass
-
-def dist_wrapper(data) :
-    func, mat_buf_id, dist_buf_id, mat_shape, s, e, start = data
-    mat_buf = shared_memory.SharedMemory(name=mat_buf_id, create=False)
-    mat = np.ndarray(mat_shape, dtype=int, buffer=mat_buf.buf)
-    dist_buf = shared_memory.SharedMemory(name=dist_buf_id, create=False)
-    dist = np.ndarray([mat_shape[0]-start, mat_shape[0], 2], dtype=np.int32, buffer=dist_buf.buf)
-    func(mat[:, 1:], s, e, dist, start)
     return
+
+def __dist_wrapper(data) :
+    func, mat_buf, dist_buf, s, e, start = data
+    mat = sa.attach(mat_buf)
+    dist = sa.attach(dist_buf)
+    func(mat[:, 1:], s, e, dist, start)
+    del mat, dist
 
 @nb.jit(nopython=True)
 def dual_dist(mat, s, e, dist, start=0):
