@@ -14,7 +14,7 @@ HierCC (Hierarchical clustering of cgMLST)
 
 HierCC is a multi-level clustering scheme for population assignments based on core genome Multi-Locus Sequence Types (cgMLSTs). HierCC as an independent python package works with any cgMLST schemes, and has also been implemented in `EnteroBase <https://enterobase.warwick.ac.uk>`_ since 2018. 
 
-HierCC is open source software mad available under `GPL-3.0 License <https://github.com/zheminzhou/HierCC/blob/master/LICENSE>`_. 
+HierCC is open source software made available under `GPL-3.0 License <https://github.com/zheminzhou/HierCC/blob/master/LICENSE>`_. 
 
 - If you use HierCC in work contributing to a scientific publication, we ask that you cite our preprint below: 
 
