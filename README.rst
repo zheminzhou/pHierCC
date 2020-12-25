@@ -102,7 +102,7 @@ And the full usage of HierCC is::
 HierCC inputs
 -------------
 
-HierCC runs in two modes. 'Development mode' builds multi-level clusters from scratch, whilst 'Production mode' assigns cluster designations for new-coming genomes incrementally, without changing the cluster assignments of any existing genome. You can find technical details in the appendex of the `bioRxiv preprint <https://doi.org/10.1101/2020.11.25.397539>`_. 
+HierCC runs in two modes. 'Development mode' builds multi-level clusters from scratch, whilst 'Production mode' assigns cluster designations for new-coming genomes incrementally, without changing the cluster assignments of any existing genome. You can find technical details in the Supplementary Text of the `bioRxiv preprint <https://doi.org/10.1101/2020.11.25.397539>`_. 
 
 - 'Development mode' requires only allelic profiles of cgMLST STs, in either plain text or GZIP format. You can find additional examples of the allelic profiles in https://pubmlst.org/data. 
 - 'Production mode' (-a) requires two input files. On top of the allelic profile file, this mode also requires a file (<prefix>.npz) consisting a pre-existing multi-level assignment. This NPZ file is part of the output of HierCC (see below). 
@@ -168,7 +168,8 @@ HCCeval generates two outputs of the same evaluation results:
 - <prefix>.val.tsv
 - <prefix>.val.pdf
 
-The PDF file is a visualization of the TSV file. Both files contain two statistic evaluations for the clustering levels:
+The PDF file is a visualization of the TSV file. You can find examples of the PDF outputs in the `supplemental Figure S1 <https://www.biorxiv.org/content/biorxiv/early/2020/11/26/2020.11.25.397539/DC1/embed/media-1.pdf>`_ of the preprint. 
+Both files contain two statistic evaluations for the clustering levels:
 
 1. `Normalized Mutual Information (NMI) <https://en.wikipedia.org/wiki/Mutual_information>`_. Mutual Information measures the similarity of two different clusterings of a dataset. It is similar to the more well known Rand Index, but has been `suggested <https://jmlr.csail.mit.edu/papers/volume17/15-627/15-627>`_ in the existence of many small clusters, which is oftenly the case for HierCC results. HCCeval implements NMI to compare all pairwise combination of HierCC levels by their clustering results. 
 
