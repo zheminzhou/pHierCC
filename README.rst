@@ -41,11 +41,10 @@ Alternatively, you may wish to download the GitHub repo and install the dependen
 Python version
 ==============
 
-HierCC is currently supported and tested on Python versions: 
+HierCC is currently supported and tested on two Python versions: 
 
 - 3.7
-- 3.8
-- 3.9 (recommended)
+- 3.8 (recommended)
 
 Python libraries
 ================
