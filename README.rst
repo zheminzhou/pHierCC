@@ -1,6 +1,10 @@
 .. image:: https://img.shields.io/pypi/v/hiercc.svg
    :alt: HierCC on the Python Package Index (PyPI)
    :target: https://pypi.python.org/pypi/hiercc
+.. image:: https://img.shields.io/conda/v/hiercc.svg
+   :alt: HierCC on the Anaconda Cloud
+   :target: https://anaconda.org/zhemin/hiercc
+
 
 Hosted by
 
