@@ -44,7 +44,7 @@ Installation
 
    conda install -c zhemin hiercc
 
-- Alternatively, you may wish to download the GitHub repo and install the dependencies yourself as shown below. 
+Alternatively, you may wish to download the GitHub repo and install the dependencies yourself as shown below. 
 
 Python version
 ==============
