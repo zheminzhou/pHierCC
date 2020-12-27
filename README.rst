@@ -35,12 +35,16 @@ DOI: https://dx.doi.org/10.1101%2Fgr.251678.119
 Installation
 ============
 
-Python 3.7 onwards, HierCC can be directly installed and upgraded via PIP, with just one terminal command::
+- Python 3.7 onwards, HierCC can be directly installed and upgraded via PIP, with just one terminal command::
 
    pip install HierCC
    pip install --upgrade HierCC
 
-Alternatively, you may wish to download the GitHub repo and install the dependencies yourself as shown below. 
+- HierCC is also made available as an Anaconda package, and can be installed via conda with the following command::
+
+   conda install -c zhemin hiercc
+
+- Alternatively, you may wish to download the GitHub repo and install the dependencies yourself as shown below. 
 
 Python version
 ==============
