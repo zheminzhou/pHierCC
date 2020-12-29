@@ -49,10 +49,13 @@ Alternatively, you may wish to download the GitHub repo and install the dependen
 Python version
 ==============
 
-HierCC is currently supported and tested on two Python versions: 
+HierCC is currently supported and tested on three Python versions: 
 
+- 3.6
 - 3.7
 - 3.8 (recommended)
+
+Python 3.9 is currently NOT supported, because Numba, one of the libaries that HierCC depends on, is not compatible with Python 3.9. This issue is expected to get resolved early 2021 according to `this thread <https://github.com/numba/numba/issues/6345>`_. 
 
 Python libraries
 ================

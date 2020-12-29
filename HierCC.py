@@ -34,16 +34,16 @@ def prepare_mat(profile_file) :
     return mat
 
 @click.command()
-@click.option('-p', '--profile', help='[INPUT; REQUIRED] name of the profile file. Can be GZIPed.',
+@click.option('-p', '--profile', help='[INPUT; REQUIRED] Name of the profile file. Can be GZIPed.',
                         required=True)
 @click.option('-o', '--output',
-                        help='[OUTPUT; REQUIRED] Prefix for the output files. These include a NUMPY and TEXT verions of the same clustering result',
+                        help='[OUTPUT; REQUIRED] Prefix for the output files. These include both NUMPY and TEXT verions of the same clustering result.',
                         required=True)
 @click.option('-a', '--append', help='[INPUT; optional] The NUMPY version of an existing HierCC result',
                         default='')
-@click.option('-m', '--allowed_missing', help='[INPUT; optional] Allowed proportion of missing genes in pairwise comparison (Default: 0.03). ',
+@click.option('-m', '--allowed_missing', help='[INPUT; optional] Allowed proportion of missing genes in pairwise comparisons (Default: 0.03). ',
                         default=0.03, type=float)
-@click.option('-n', '--n_proc', help='[INPUT; optional] Number of processors (Default: 4).', default=4, type=int)
+@click.option('-n', '--n_proc', help='[INPUT; optional] Number of processes (CPUs) to use (Default: 4).', default=4, type=int)
 def hierCC(profile, output, append, n_proc, allowed_missing):
     '''HierCC takes allelic profile (as in https://pubmlst.org/data/) and
     work out hierarchical clusters of all the profiles based on a minimum-spanning tree.'''
