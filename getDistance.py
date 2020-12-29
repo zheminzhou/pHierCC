@@ -2,7 +2,7 @@ import numpy as np, numba as nb, os
 from tempfile import NamedTemporaryFile
 import SharedArray as sa
 
-def getDistance(data, func_name, pool, start=0):
+def getDistance(data, func_name, pool, start=0, allowed_missing=0.0):
     with NamedTemporaryFile(dir='.', prefix='HCC_') as file :
         prefix = 'file://{0}'.format(file.name)
         func = eval(func_name)
@@ -12,14 +12,14 @@ def getDistance(data, func_name, pool, start=0):
         dist_buf = '{0}.dist.sa'.format(prefix)
         dist = sa.create(dist_buf, shape = [mat.shape[0] - start, mat.shape[0], 2], dtype = np.int32)
         dist[:] = 0
-        __parallel_dist(mat_buf, func, dist_buf, mat.shape, pool, start)
+        __parallel_dist(mat_buf, func, dist_buf, mat.shape, pool, start, allowed_missing)
         sa.delete(mat_buf)
         os.unlink(dist_buf[7:])
     return dist
 
 
 
-def __parallel_dist(mat_buf, func, dist_buf, mat_shape, pool, start=0) :
+def __parallel_dist(mat_buf, func, dist_buf, mat_shape, pool, start=0, allowed_missing=0.0) :
     n_pool = len(pool._pool)
     tot_cmp = (mat_shape[0] * mat_shape[0] - start * start)/n_pool
     s, indices = start, []
@@ -28,19 +28,19 @@ def __parallel_dist(mat_buf, func, dist_buf, mat_shape, pool, start=0) :
         indices.append([s, e])
         s = e
     indices = (np.array(indices)+0.5).astype(int)
-    for _ in pool.imap_unordered(__dist_wrapper, [[func, mat_buf, dist_buf, s, e, start] for s, e in indices ]) :
+    for _ in pool.imap_unordered(__dist_wrapper, [[func, mat_buf, dist_buf, s, e, start, allowed_missing] for s, e in indices ]) :
         pass
     return
 
 def __dist_wrapper(data) :
-    func, mat_buf, dist_buf, s, e, start = data
+    func, mat_buf, dist_buf, s, e, start, allowed_missing = data
     mat = sa.attach(mat_buf)
     dist = sa.attach(dist_buf)
-    func(mat[:, 1:], s, e, dist, start)
+    func(mat[:, 1:], s, e, dist, start, allowed_missing)
     del mat, dist
 
 @nb.jit(nopython=True)
-def dual_dist(mat, s, e, dist, start=0):
+def dual_dist(mat, s, e, dist, start=0, allowed_missing=0.03):
     n_loci = mat.shape[1]
     for i in range(s, e+1) :
         ql = np.sum(mat[i] > 0)
@@ -67,7 +67,7 @@ def dual_dist(mat, s, e, dist, start=0):
             dist[i-start, j, 0] = int(ad/al * n_loci + 0.5)
 
 @nb.jit(nopython=True)
-def p_dist(mat, s, e, dist, start=0):
+def p_dist(mat, s, e, dist, start=0, allowed_missing=0.0):
     n_loci = mat.shape[1]
     for i in range(s, e+1) :
         for j in range(i) :

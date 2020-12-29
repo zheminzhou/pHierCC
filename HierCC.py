@@ -16,7 +16,7 @@
 
 import sys, gzip, logging, click
 import pandas as pd, numpy as np
-from multiprocessing import Pool, set_start_method
+from multiprocessing import Pool #, set_start_method
 from scipy.spatial import distance as ssd
 from scipy.cluster.hierarchy import linkage
 try :
@@ -41,8 +41,10 @@ def prepare_mat(profile_file) :
                         required=True)
 @click.option('-a', '--append', help='[INPUT; optional] The NUMPY version of an existing HierCC result',
                         default='')
-@click.option('-n', '--n_proc', help='[DEFAULT: 4] Number of processors.', default=4, type=int)
-def hierCC(profile, output, append, n_proc):
+@click.option('-m', '--allowed_missing', help='[INPUT; optional] Allowed proportion of missing genes in pairwise comparison (Default: 0.03). ',
+                        default=0.03, type=float)
+@click.option('-n', '--n_proc', help='[INPUT; optional] Number of processors (Default: 4).', default=4, type=int)
+def hierCC(profile, output, append, n_proc, allowed_missing):
     '''HierCC takes allelic profile (as in https://pubmlst.org/data/) and
     work out hierarchical clusters of all the profiles based on a minimum-spanning tree.'''
     pool = Pool(n_proc)
@@ -80,7 +82,7 @@ def hierCC(profile, output, append, n_proc):
     logging.info('Calculate distance matrix')
 
     # prepare existing tree
-    dist = getDistance(mat, 'dual_dist', pool, start)
+    dist = getDistance(mat, 'dual_dist', pool, start, allowed_missing)
     if append :
         for r in res :
             if r[0] in typed :
@@ -120,6 +122,6 @@ def hierCC(profile, output, append, n_proc):
     pool.close()
 
 if __name__ == '__main__':
-    set_start_method('spawn')
+    #set_start_method('spawn')
     hierCC(sys.argv[1:])
 
