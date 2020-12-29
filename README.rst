@@ -87,7 +87,7 @@ HierCC can be run on the toy dataset with a command::
 
 And the full usage of HierCC is::
 
-   $ HierCC --help
+   HierCC --help
    Usage: HierCC [OPTIONS]
 
      HierCC takes allelic profile (as in https://pubmlst.org/data/) and work
@@ -95,18 +95,23 @@ And the full usage of HierCC is::
      tree.
 
    Options:
-     -p, --profile TEXT    [INPUT; REQUIRED] name of the profile file. Can be
-                           GZIPed.  [required]
+     -p, --profile TEXT           [INPUT; REQUIRED] name of the profile file. Can
+                                  be GZIPed.  [required]
 
-     -o, --output TEXT     [OUTPUT; REQUIRED] Prefix for the output files. These
-                           include a NUMPY and TEXT verions of the same
-                           clustering result  [required]
+     -o, --output TEXT            [OUTPUT; REQUIRED] Prefix for the output files.
+                                  These include a NUMPY and TEXT verions of the
+                                  same clustering result  [required]
 
-     -a, --append TEXT     [INPUT; optional] The NUMPY version of an existing
-                           HierCC result
+     -a, --append TEXT            [INPUT; optional] The NUMPY version of an
+                                  existing HierCC result
 
-     -n, --n_proc INTEGER  [DEFAULT: 4] Number of processors.
-     --help                Show this message and exit.
+     -m, --allowed_missing FLOAT  [INPUT; optional] Allowed proportion of missing
+                                  genes in pairwise comparison (Default: 0.03).
+
+     -n, --n_proc INTEGER         [INPUT; optional] Number of processors
+                                  (Default: 4).
+
+     --help                       Show this message and exit.
 
 
 HierCC inputs
