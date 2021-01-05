@@ -20,7 +20,7 @@ HierCC is a multi-level clustering scheme for population assignments based on co
 
 pHierCC
 =======
-pHierCC is an independent python package that generates and evaluates HierCC schemes based on any cgMLST scheme. 
+pHierCC is an independent python package that generates and evaluates a HierCC scheme based on any cgMLST scheme. 
 pHierCC is open source software made available under `GPL-3.0 License <https://github.com/zheminzhou/HierCC/blob/master/LICENSE>`_. 
 
 - If you use pHierCC in work contributing to a scientific publication, we ask that you cite our preprint below: 
