@@ -6,8 +6,8 @@
 # Author: Zhemin Zhou
 # Lisence: GPLv3
 #
-# New assignment: phierCC -p <allelic_profile> -o <output_prefix>
-# Incremental assignment: phierCC -p <allelic_profile> -o <output_prefix> -i <old_cluster_npz>
+# New assignment: pHierCC -p <allelic_profile> -o <output_prefix>
+# Incremental assignment: pHierCC -p <allelic_profile> -o <output_prefix> -i <old_cluster_npz>
 # Input format (tab delimited):
 # ST_id gene1 gene2
 # 1 1 1
@@ -57,7 +57,7 @@ def phierCC(profile, output, append, n_proc, allowed_missing):
     logging.info(
         'Loaded in allelic profiles with dimension: {0} and {1}. The first column is assumed to be type id.'.format(
             *mat.shape))
-    logging.info('Start hierCC assignments')
+    logging.info('Start HierCC assignments')
 
     # prepare existing clusters
     if not append:
@@ -69,7 +69,7 @@ def phierCC(profile, output, append, n_proc, allowed_missing):
         cls = od['hierCC']
         typed = {c: id for id, c in enumerate(cls.T[0]) if c > 0}
     if len(typed) > 0:
-        logging.info('Loaded in {0} old hierCC assignments.'.format(len(typed)))
+        logging.info('Loaded in {0} old HierCC assignments.'.format(len(typed)))
         mat_idx = np.array([t in typed for t in mat.T[0]])
         mat[:] = np.vstack([mat[mat_idx], mat[(mat_idx) == False]])
         start = np.sum(mat_idx)
@@ -117,7 +117,7 @@ def phierCC(profile, output, append, n_proc, allowed_missing):
         for r in res[np.argsort(res.T[0])]:
             fout.write('\t'.join([str(rr) for rr in r]) + '\n')
 
-    logging.info('NUMPY clustering result (for incremental HierCC): {0}.npz'.format(output))
+    logging.info('NUMPY clustering result (for production mode): {0}.npz'.format(output))
     logging.info('TEXT  clustering result (for visual inspection): {0}.HierCC.gz'.format(output))
     pool.close()
 
