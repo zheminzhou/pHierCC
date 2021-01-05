@@ -172,8 +172,8 @@ HCCeval inputs
 
 HCCeval requires two inputs:
 
-- (profile) A file containing allelic profiles, in plain text or gzipped. 
-- (cluster) The human readable <prefix>.HierCC.gz output by HierCC. 
+- (profile) A file containing allelic profiles, in plain text or gzipped (see `HierCC inputs <README.rst#hiercc-inputs>`_). 	
+- (cluster) The human readable <prefix>.HierCC.gz output by HierCC (see `HierCC outputs <README.rst#hiercc-outputs>`_).	
 
 HCCeval outputs
 ---------------
