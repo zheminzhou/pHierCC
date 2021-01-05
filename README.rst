@@ -90,29 +90,31 @@ pHierCC can be run on the toy dataset using the following command::
 
 And the full usage of pHierCC is::
 
-   pHierCC --help
+   $ pHierCC --help
    Usage: pHierCC [OPTIONS]
 
-     pHierCC takes a file containing allelic profiles (as in https://pubmlst.org/data/) and works
-     out hierarchical clusters of the full dataset based on a minimum-spanning
-     tree.
+     pHierCC takes a file containing allelic profiles (as in
+     https://pubmlst.org/data/) and works out hierarchical clusters of the full
+     dataset based on a minimum-spanning tree.
 
    Options:
-     -p, --profile TEXT           [INPUT; REQUIRED] name of a profile file consisting of a table of columns of the ST numbers and the allelic numbers, separated by tabs. Can
-                                  be GZIPped.  [required]
+     -p, --profile TEXT           [INPUT] name of a profile file consisting of a
+                                  table of columns of the ST numbers and the
+                                  allelic numbers, separated by tabs. Can be
+                                  GZIPped.  [required]
 
-     -o, --output TEXT            [OUTPUT; REQUIRED] Prefix for the output files 
-                                  consisting of a  NUMPY and a TEXT version of the
-                                  clustering result. [required]
+     -o, --output TEXT            [OUTPUT] Prefix for the output files consisting
+                                  of a  NUMPY and a TEXT version of the
+                                  clustering result.   [required]
 
-     -a, --append TEXT            [INPUT; optional] The NPZ output of a
-                                  previous pHierCC run. 
+     -a, --append TEXT            [INPUT; optional] The NPZ output of a previous
+                                  pHierCC run (Default: None).
 
      -m, --allowed_missing FLOAT  [INPUT; optional] Allowed proportion of missing
                                   genes in pairwise comparisons (Default: 0.03).
 
-     -n, --n_proc INTEGER         [INPUT; optional] Number of processors
-                                  (Default: 4).
+     -n, --n_proc INTEGER         [INPUT; optional] Number of processes (CPUs) to
+                                  use (Default: 4).
 
      --help                       Show this message and exit.
 
@@ -153,20 +155,26 @@ And the full usage of HCCeval is::
    $ HCCeval --help
    Usage: HCCeval [OPTIONS]
 
-     evalHCC evaluates HierCC levels using varied statistic summaries.
+     evalHCC evaluates a HierCC scheme using varied statistic summaries.
 
    Options:
-     -p, --profile TEXT      [INPUT; REQUIRED] Name of a profile file consisting of a table of columns of the ST numbers and the allelic numbers, separated by tabs. Can
-                             be GZIPped.  [required]
-
-     -c, --cluster TEXT      [INPUT; REQUIRED] Name of the pHierCC text output. Can be
-                             GZIPed.  [required]
-
-     -o, --output TEXT       [OUTPUT; REQUIRED] Prefix for the two output files.
+     -p, --profile TEXT      [INPUT] Name of a profile file consisting of a table
+                             of columns of the ST numbers and the allelic
+                             numbers, separated by tabs. Can be GZIPped.
                              [required]
 
-     -s, --stepwise INTEGER  [DEFAULT: 10] Evaluate every <stepwise> levels.
-     -n, --n_proc INTEGER    [DEFAULT: 4] Number of processors.
+     -c, --cluster TEXT      [INPUT] Name of the pHierCC text output. Can be
+                             GZIPped.  [required]
+
+     -o, --output TEXT       [OUTPUT] Prefix for the two output files.
+                             [required]
+
+     -s, --stepwise INTEGER  [INPUT; optional] Evaluate every <stepwise> levels
+                             (Default: 10).
+
+     -n, --n_proc INTEGER    [INPUT; optional] Number of processes (CPUs) to use
+                             (Default: 4).
+
      --help                  Show this message and exit.
 
 
