@@ -69,13 +69,13 @@ def prepare_mat(profile_file) :
 
 
 @click.command()
-@click.option('-p', '--profile', help='[INPUT; REQUIRED] name of the profile file. Can be GZIPed.', required=True)
-@click.option('-c', '--cluster', help='[INPUT; REQUIRED] name of the HierCC file. Can be GZIPed.', required=True)
-@click.option('-o', '--output', help='[OUTPUT; REQUIRED] Prefix for the output files.', required=True)
-@click.option('-s', '--stepwise', help='[DEFAULT: 10] Evaluate every <stepwise> levels.', default=10, type=int)
-@click.option('-n', '--n_proc', help='[DEFAULT: 4] Number of processors.', default=4, type=int)
+@click.option('-p', '--profile', help='[INPUT] Name of a profile file consisting of a table of columns of the ST numbers and the allelic numbers, separated by tabs. Can be GZIPped.', required=True)
+@click.option('-c', '--cluster', help='[INPUT] Name of the pHierCC text output. Can be GZIPped.', required=True)
+@click.option('-o', '--output', help='[OUTPUT] Prefix for the two output files.', required=True)
+@click.option('-s', '--stepwise', help='[INPUT; optional] Evaluate every <stepwise> levels (Default: 10).', default=10, type=int)
+@click.option('-n', '--n_proc', help='[INPUT; optional] Number of processes (CPUs) to use (Default: 4).', default=4, type=int)
 def evalHCC(profile, cluster, output, stepwise, n_proc) :
-    '''evalHCC evaluates HierCC results using varied statistic summaries.'''
+    '''evalHCC evaluates a HierCC scheme using varied statistic summaries.'''
     pool = Pool(n_proc)
 
     profile = prepare_mat(profile)
