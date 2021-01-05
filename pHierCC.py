@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-# HierCC.py
-# Hierarchical Clustering Complex of MLST allelic profiles
+# pHierCC.py
+# pipeline for Hierarchical Clustering of cgMLST
 #
 # Author: Zhemin Zhou
 # Lisence: GPLv3
 #
-# New assignment: hierCC.py -p <allelic_profile> -o <output_prefix>
-# Incremental assignment: hierCC.py -p <allelic_profile> -o <output_prefix> -i <old_cluster_npy>
-# Input format:
+# New assignment: phierCC -p <allelic_profile> -o <output_prefix>
+# Incremental assignment: phierCC -p <allelic_profile> -o <output_prefix> -i <old_cluster_npz>
+# Input format (tab delimited):
 # ST_id gene1 gene2
 # 1 1 1
 # 2 1 2
@@ -34,19 +34,19 @@ def prepare_mat(profile_file) :
     return mat
 
 @click.command()
-@click.option('-p', '--profile', help='[INPUT; REQUIRED] Name of the profile file. Can be GZIPed.',
+@click.option('-p', '--profile', help='[INPUT] name of a profile file consisting of a table of columns of the ST numbers and the allelic numbers, separated by tabs. Can be GZIPped.',
                         required=True)
 @click.option('-o', '--output',
-                        help='[OUTPUT; REQUIRED] Prefix for the output files. These include both NUMPY and TEXT verions of the same clustering result.',
+                        help='[OUTPUT] Prefix for the output files consisting of a  NUMPY and a TEXT version of the clustering result. ',
                         required=True)
-@click.option('-a', '--append', help='[INPUT; optional] The NUMPY version of an existing HierCC result',
+@click.option('-a', '--append', help='[INPUT; optional] The NPZ output of a previous pHierCC run (Default: None). ',
                         default='')
 @click.option('-m', '--allowed_missing', help='[INPUT; optional] Allowed proportion of missing genes in pairwise comparisons (Default: 0.03). ',
                         default=0.03, type=float)
 @click.option('-n', '--n_proc', help='[INPUT; optional] Number of processes (CPUs) to use (Default: 4).', default=4, type=int)
-def hierCC(profile, output, append, n_proc, allowed_missing):
-    '''HierCC takes allelic profile (as in https://pubmlst.org/data/) and
-    work out hierarchical clusters of all the profiles based on a minimum-spanning tree.'''
+def phierCC(profile, output, append, n_proc, allowed_missing):
+    '''pHierCC takes a file containing allelic profiles (as in https://pubmlst.org/data/) and works
+    out hierarchical clusters of the full dataset based on a minimum-spanning tree.'''
     pool = Pool(n_proc)
 
     profile_file, cluster_file, old_cluster = profile, output + '.npz', append
@@ -122,6 +122,5 @@ def hierCC(profile, output, append, n_proc, allowed_missing):
     pool.close()
 
 if __name__ == '__main__':
-    #set_start_method('spawn')
-    hierCC(sys.argv[1:])
+    phierCC(sys.argv[1:])
 
