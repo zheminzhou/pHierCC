@@ -90,20 +90,20 @@ And the full usage of HierCC is::
    HierCC --help
    Usage: HierCC [OPTIONS]
 
-     HierCC takes a set of allelic profiles (as in https://pubmlst.org/data/) and works
+     HierCC takes a file containing allelic profiles (as in https://pubmlst.org/data/) and works
      out hierarchical clusters of the full dataset based on a minimum-spanning
      tree.
 
    Options:
-     -p, --profile TEXT           [INPUT; REQUIRED] name of the profile file. Can
-                                  be GZIPed.  [required]
+     -p, --profile TEXT           [INPUT; REQUIRED] name of a profile file consisting of a table of columns of the ST numbers and the allelic numbers, separated by tabs. Can
+                                  be GZIPped.  [required]
 
-     -o, --output TEXT            [OUTPUT; REQUIRED] Prefix for the output files.
-                                  These include a NUMPY and TEXT verions of the
-                                  same clustering result  [required]
+     -o, --output TEXT            [OUTPUT; REQUIRED] Prefix for the output files 
+                                  consisting of a  NUMPY and a TEXT version of the
+                                  clustering result. [required]
 
-     -a, --append TEXT            [INPUT; optional] The NUMPY version of an
-                                  existing HierCC result
+     -a, --append TEXT            [INPUT; optional] The NPZ output of a
+                                  previous HierCC run. 
 
      -m, --allowed_missing FLOAT  [INPUT; optional] Allowed proportion of missing
                                   genes in pairwise comparisons (Default: 0.03).
@@ -119,8 +119,8 @@ HierCC inputs
 
 HierCC runs in two modes. 'Development mode' builds a multi-level hierarchical clustering scheme from scratch, whilst 'Production mode' assigns new in-coming genomes to clusters incrementally, without changing the cluster assignments of any existing genome. You can find technical details in the Supplementary Text of the `bioRxiv preprint <https://doi.org/10.1101/2020.11.25.397539>`_. 
 
-- 'Development mode' requires only one file (--profile) containing allelic profiles of cgMLST STs, consisting of a table of columns of the ST numbers and the allelic numbers, separated by tabs, in either plain text or GZIP format. You can find additional examples of allelic profiles in https://pubmlst.org/data. 
-- 'Production mode' requires two input files. In addition to the profile file, this mode also requires a NPZ file (via --append) consisting a pre-existing multi-level assignment, which is part of the output (see below) of a previous HierCC run. 
+- 'Development mode' requires only one file (--profile) containing allelic profiles of cgMLST STs, in either plain text or GZIP format. You can find additional examples of allelic profiles in https://pubmlst.org/data. 
+- 'Production mode' is triggered when an additional option, '--append', is provided with a NPZ file consisting a pre-existing multi-level assignment, which is part of the output (see below) of a previous HierCC run. 
 
 HierCC outputs
 --------------
@@ -153,13 +153,13 @@ And the full usage of HCCeval is::
      evalHCC evaluates HierCC results using varied statistic summaries.
 
    Options:
-     -p, --profile TEXT      [INPUT; REQUIRED] name of the profile file. Can be
+     -p, --profile TEXT      [INPUT; REQUIRED] Name of a profile file consisting of a table of columns of the ST numbers and the allelic numbers, separated by tabs. Can
+                             be GZIPped.  [required]
+
+     -c, --cluster TEXT      [INPUT; REQUIRED] Name of the HierCC text output. Can be
                              GZIPed.  [required]
 
-     -c, --cluster TEXT      [INPUT; REQUIRED] name of the HierCC file. Can be
-                             GZIPed.  [required]
-
-     -o, --output TEXT       [OUTPUT; REQUIRED] Prefix for the output files.
+     -o, --output TEXT       [OUTPUT; REQUIRED] Prefix for the two output files.
                              [required]
 
      -s, --stepwise INTEGER  [DEFAULT: 10] Evaluate every <stepwise> levels.
@@ -172,8 +172,8 @@ HCCeval inputs
 
 HCCeval requires two inputs:
 
-- (profile) A file containing allelic profiles, in plain text or gzipped (see `HierCC inputs <README.rst#hiercc-inputs>`_). 	
-- (cluster) The human readable <prefix>.HierCC.gz output by HierCC (see `HierCC outputs <README.rst#hiercc-outputs>`_).	
+- (--profile) A file containing allelic profiles, in plain text or gzipped (see `HierCC inputs <README.rst#hiercc-inputs>`_). 	
+- (--cluster) The human readable <prefix>.HierCC.gz output by HierCC (see `HierCC outputs <README.rst#hiercc-outputs>`_).	
 
 HCCeval outputs
 ---------------
@@ -186,8 +186,8 @@ HCCeval generates two outputs of the same evaluation results:
 The PDF file is a visualization of the TSV file. You can find examples of the PDF outputs in the `supplemental Figure S1 <https://www.biorxiv.org/content/biorxiv/early/2020/11/26/2020.11.25.397539/DC1/embed/media-1.pdf>`_ of the preprint. 
 Both files contain two statistical evaluations of the clustering levels:
 
-1. `Normalized Mutual Information (NMI) <https://en.wikipedia.org/wiki/Mutual_information>`_ (`Kvalseth TO 1987 <https://ieeexplore.ieee.org/abstract/document/4309069>`_). Mutual Information measures the similarity of two different clusterings of a dataset as a harmonic mean of homogeneity and completeness. It is similar to the more well known Rand Index, but gives more accurate estimates for `datasets <https://jmlr.csail.mit.edu/papers/volume17/15-627/15-627>`_ that contains many small clusters, which is often the case for HierCC results. HCCeval calculates an NMI score for each pairwise combination of HierCC levels based on the clustering of cgSTs at each level. 
+1. `Normalized Mutual Information (NMI) <https://en.wikipedia.org/wiki/Mutual_information>`_ (`Kvalseth TO 1987 <https://ieeexplore.ieee.org/abstract/document/4309069>`_). Mutual Information measures the similarity of two different clusterings of a dataset as a harmonic mean of homogeneity and completeness. It is similar to the better known Rand Index, but gives more accurate estimates for `dataset <https://jmlr.csail.mit.edu/papers/volume17/15-627/15-627>`_ that contains many small clusters, which is often the case for HierCC results. HCCeval calculates an NMI score for each pairwise combination of HierCC levels based on the clustering of cgSTs at each level. 
 
-2. `Silhouette score <https://en.wikipedia.org/wiki/Silhouette_(clustering)>`_ (`Rousseeuw PJ 1987 <https://www.sciencedirect.com/science/article/pii/0377042787901257>`_).. Silhouette score estimates the cohesiveness of a clustering result by measuring how similar a cgST is to both to cgSTs within its own cluster (cohesion) and in comparison to other clusters (separation). The Silhouette score ranges between -1 and +1, where a high value indicates a robust clustering. 
+2. `Silhouette score <https://en.wikipedia.org/wiki/Silhouette_(clustering)>`_ (`Rousseeuw PJ 1987 <https://www.sciencedirect.com/science/article/pii/0377042787901257>`_). Silhouette score estimates the cohesiveness of a clustering result by measuring how similar a cgST is to both to cgSTs within its own cluster (cohesion) and in comparison to other clusters (separation). The Silhouette score ranges between -1 and +1, where a high value indicates a robust clustering. 
 
-In practice, 'stable blocks' are identified from HierCC results using NMI. Every stable block of NMI scores consists of a continuous set of HierCC levels that define highly similar clusters (NMI >= 0.9). This indicates that the clusters generated by these HierCC levels are more robust to modest changes of the clustering cutoffs. The most cohesive HierCC level in each stable block (ie the level within each block with the greatest Silhouette score) is likely to represent natural microbial population structure. 
+In practice, 'stable blocks' are identified from HierCC results using NMI. Each stable block of NMI scores consists of a continuous set of HierCC levels that define highly similar clusters (NMI >= 0.9). This indicates that the clusters generated by these HierCC levels are robust to modest changes of the clustering thresholds. The most cohesive HierCC level in each stable block (ie the level within each block with the greatest Silhouette score) is likely to represent natural microbial population structure. 
