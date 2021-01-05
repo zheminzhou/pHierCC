@@ -119,7 +119,7 @@ HierCC inputs
 
 HierCC runs in two modes. 'Development mode' builds a multi-level hierarchical clustering scheme from scratch, whilst 'Production mode' assigns new in-coming genomes to clusters incrementally, without changing the cluster assignments of any existing genome. You can find technical details in the Supplementary Text of the `bioRxiv preprint <https://doi.org/10.1101/2020.11.25.397539>`_. 
 
-- 'Development mode' requires only one file (--profile) containing allelic profiles of cgMLST STs, in either plain text or GZIP format. You can find additional examples of allelic profiles in https://pubmlst.org/data. 
+- 'Development mode' requires only one file (--profile) containing allelic profiles of cgMLST STs, consisting of a table of columns of the ST numbers and the allelic numbers, separated by tabs, in either plain text or GZIP format. You can find additional examples of allelic profiles in https://pubmlst.org/data. 
 - 'Production mode' requires two input files. In addition to the profile file, this mode also requires a NPZ file (via --append) consisting a pre-existing multi-level assignment, which is part of the output (see below) of a previous HierCC run. 
 
 HierCC outputs
