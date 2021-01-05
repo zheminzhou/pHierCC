@@ -118,7 +118,7 @@ def phierCC(profile, output, append, n_proc, allowed_missing):
             fout.write('\t'.join([str(rr) for rr in r]) + '\n')
 
     logging.info('NUMPY clustering result (for production mode): {0}.npz'.format(output))
-    logging.info('TEXT  clustering result (for visual inspection): {0}.HierCC.gz'.format(output))
+    logging.info('TEXT  clustering result (for visual inspection and HCCeval): {0}.HierCC.gz'.format(output))
     pool.close()
 
 if __name__ == '__main__':
