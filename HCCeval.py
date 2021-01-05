@@ -123,8 +123,8 @@ def evalHCC(profile, cluster, output, stepwise, n_proc) :
     cb.set_ticks([-30, -23.01, -20, -13.01, -10, -3.01, 0])
     cb.ax.set_yticklabels(['>=.999', '.995', '.99', '.95', '.9', '.5', '.0'])
     plt.savefig(output+'.pdf')
-    logging.info('Tab delimited evaluation is save in {0}.tsv'.format(output))
-    logging.info('Graphic visualisation is save in {0}.pdf'.format(output))
+    logging.info('Tab-delimited evaluation is saved in {0}.tsv'.format(output))
+    logging.info('Visualisation is saved in {0}.pdf'.format(output))
     pool.close()
 
 if __name__ == '__main__' :
