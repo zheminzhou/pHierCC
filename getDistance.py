@@ -36,11 +36,13 @@ def __dist_wrapper(data) :
     func, mat_buf, dist_buf, s, e, start, allowed_missing = data
     mat = sa.attach(mat_buf)
     dist = sa.attach(dist_buf)
-    func(mat[:, 1:], s, e, dist, start, allowed_missing)
+    d = func(mat[:, 1:], s, e, allowed_missing)
+    dist[s:e] = d
     del mat, dist
 
 @nb.jit(nopython=True)
-def dual_dist(mat, s, e, dist, start=0, allowed_missing=0.03):
+def dual_dist(mat, s, e, allowed_missing=0.03):
+    dist = np.zeros((e-s, mat.shape[0], 2), dtype=np.int32 )
     n_loci = mat.shape[1]
     for i in range(s, e+1) :
         ql = np.sum(mat[i] > 0)
@@ -53,21 +55,23 @@ def dual_dist(mat, s, e, dist, start=0, allowed_missing=0.03):
                         al += 1
                         if mat[i, k] != mat[j, k] :
                             ad += 1
-            ll = max(ql, rl) - 0.03 * n_loci
-            ll2 = ql - 0.03 * n_loci
+            ll = max(ql, rl) - allowed_missing * n_loci
+            ll2 = ql - allowed_missing * n_loci
 
             if ll2 > al :
                 ad += ll2 - al
                 al = ll2
-            dist[i-start, j, 1] = int(ad/al * n_loci + 0.5)
+            dist[i-s, j, 1] = int(ad/al * n_loci + 0.5)
 
             if ll > al :
                 ad += ll - al
                 al = ll
-            dist[i-start, j, 0] = int(ad/al * n_loci + 0.5)
+            dist[i-s, j, 0] = int(ad/al * n_loci + 0.5)
+    return dist
 
 @nb.jit(nopython=True)
-def p_dist(mat, s, e, dist, start=0, allowed_missing=0.0):
+def p_dist(mat, s, e, allowed_missing=0.0):
+    dist = np.zeros((e-s, mat.shape[0], 2), dtype=np.int32 )
     n_loci = mat.shape[1]
     for i in range(s, e+1) :
         for j in range(i) :
@@ -78,4 +82,5 @@ def p_dist(mat, s, e, dist, start=0, allowed_missing=0.0):
                         al += 1
                         if mat[i, k] != mat[j, k] :
                             ad += 1
-            dist[i-start, j, 0] = int( -np.log(1.-(ad+0.5)/(al+1.0)) * n_loci * 100. + 0.5)
+            dist[i-s, j, 0] = int( -np.log(1.-(ad+0.5)/(al+1.0)) * n_loci * 100. + 0.5)
+    return dist
