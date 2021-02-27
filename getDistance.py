@@ -14,7 +14,8 @@ def getDistance(data, func_name, pool, start=0, allowed_missing=0.0):
         dist[:] = 0
         __parallel_dist(mat_buf, func, dist_buf, mat.shape, pool, start, allowed_missing)
         sa.delete(mat_buf)
-        os.unlink(dist_buf[7:])
+        sa.delete(dist_buf)
+        #os.unlink(dist_buf[7:])
     return dist
 
 
@@ -36,15 +37,16 @@ def __dist_wrapper(data) :
     func, mat_buf, dist_buf, s, e, start, allowed_missing = data
     mat = sa.attach(mat_buf)
     dist = sa.attach(dist_buf)
-    d = func(mat[:, 1:], s, e, allowed_missing)
-    dist[s:e] = d
+    if e > s :
+        d = func(mat[:, 1:], s, e, allowed_missing)
+        dist[s:e] = d
     del mat, dist
 
 @nb.jit(nopython=True)
 def dual_dist(mat, s, e, allowed_missing=0.03):
     dist = np.zeros((e-s, mat.shape[0], 2), dtype=np.int32 )
     n_loci = mat.shape[1]
-    for i in range(s, e+1) :
+    for i in range(s, e) :
         ql = np.sum(mat[i] > 0)
         for j in range(i) :
             rl, ad, al = 0., 1e-4, 1e-4
