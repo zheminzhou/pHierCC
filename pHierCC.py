@@ -29,9 +29,17 @@ logging.basicConfig(format='%(asctime)s | %(message)s', stream=sys.stdout, level
 def prepare_mat(profile_file) :
     mat = pd.read_csv(profile_file, sep='\t', header=None, dtype=str).values
     allele_columns = np.array([i == 0 or (not h.startswith('#')) for i, h in enumerate(mat[0])])
-    mat = mat[1:, allele_columns].astype(int)
-    mat = mat[mat.T[0]>0]
-    return mat
+    mat = mat[1:, allele_columns]
+    try :
+        mat = mat.astype(int)
+        mat = mat[mat.T[0] > 0]
+        names = mat.T[0]
+    except :
+        names = mat.T[0].copy()
+        mat.T[0] = np.arange(1, mat.shape[0]+1)
+        mat = mat.astype(int)
+    mat[mat < 0] = 0
+    return mat, names
 
 @click.command()
 @click.option('-p', '--profile', help='[INPUT] name of a profile file consisting of a table of columns of the ST numbers and the allelic numbers, separated by tabs. Can be GZIPped.',
@@ -41,8 +49,8 @@ def prepare_mat(profile_file) :
                         required=True)
 @click.option('-a', '--append', help='[INPUT; optional] The NPZ output of a previous pHierCC run (Default: None). ',
                         default='')
-@click.option('-m', '--allowed_missing', help='[INPUT; optional] Allowed proportion of missing genes in pairwise comparisons (Default: 0.03). ',
-                        default=0.03, type=float)
+@click.option('-m', '--allowed_missing', help='[INPUT; optional] Allowed proportion of missing genes in pairwise comparisons (Default: 0.05). ',
+                        default=0.05, type=float)
 @click.option('-n', '--n_proc', help='[INPUT; optional] Number of processes (CPUs) to use (Default: 4).', default=4, type=int)
 def phierCC(profile, output, append, n_proc, allowed_missing):
     '''pHierCC takes a file containing allelic profiles (as in https://pubmlst.org/data/) and works
@@ -51,7 +59,7 @@ def phierCC(profile, output, append, n_proc, allowed_missing):
 
     profile_file, cluster_file, old_cluster = profile, output + '.npz', append
 
-    mat = prepare_mat(profile_file)
+    mat, names = prepare_mat(profile_file)
     n_loci = mat.shape[1] - 1
 
     logging.info(
@@ -67,12 +75,20 @@ def phierCC(profile, output, append, n_proc, allowed_missing):
     else :
         od = np.load(old_cluster, allow_pickle=True)
         cls = od['hierCC']
-        typed = {c: id for id, c in enumerate(cls.T[0]) if c > 0}
+        try :
+            n = od['names']
+        except :
+            n = cls.T[0]
+        typed = {c: id for id, c in enumerate(n)}
     if len(typed) > 0:
         logging.info('Loaded in {0} old HierCC assignments.'.format(len(typed)))
-        mat_idx = np.array([t in typed for t in mat.T[0]])
-        mat[:] = np.vstack([mat[mat_idx], mat[(mat_idx) == False]])
-        start = np.sum(mat_idx)
+        # mat_idx = np.array([t in typed for t in names])
+        mat_idx = np.argsort([typed.get(t, len(typed)) for t in names])
+        mat[:] = mat[mat_idx]
+        names[:] = names[mat_idx]
+        start = np.sum([t in typed for t in names])
+        if names.dtype != np.int64 :
+            mat.T[0] = np.arange(1, mat.shape[0]+1)
     else :
         start = 0
 
@@ -84,9 +100,9 @@ def phierCC(profile, output, append, n_proc, allowed_missing):
     # prepare existing tree
     dist = getDistance(mat, 'dual_dist', pool, start, allowed_missing)
     if append :
-        for r in res :
-            if r[0] in typed :
-                r[:] = cls[typed[r[0]]]
+        for n, r in zip(names, res) :
+            if n in typed :
+                r[:] = cls[typed[n]]
     else :
         dist[:, :, 0] += dist[:, :, 0].T
         logging.info('Start Single linkage clustering')
@@ -110,12 +126,13 @@ def phierCC(profile, output, append, n_proc, allowed_missing):
             if r[min_d + 1] > res[i, min_d + 1]:
                 r[min_d + 1:] = res[i, min_d + 1:]
     res.T[0] = mat.T[0]
-    np.savez_compressed(cluster_file, hierCC=res)
+    res = res[np.argsort(res.T[0])]
+    np.savez_compressed(cluster_file, hierCC=res, names=names)
 
     with gzip.open(output + '.HierCC.gz', 'wt') as fout:
         fout.write('#ST_id\t{0}\n'.format('\t'.join(['HC' + str(id) for id in np.arange(n_loci+1)])))
-        for r in res[np.argsort(res.T[0])]:
-            fout.write('\t'.join([str(rr) for rr in r]) + '\n')
+        for n, r in zip(names, res):
+            fout.write('\t'.join([n] + [str(rr) for rr in r[1:]]) + '\n')
 
     logging.info('NPZ  clustering result (for production mode): {0}.npz'.format(output))
     logging.info('TEXT clustering result (for visual inspection and HCCeval): {0}.HierCC.gz'.format(output))

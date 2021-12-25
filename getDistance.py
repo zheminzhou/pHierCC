@@ -39,11 +39,11 @@ def __dist_wrapper(data) :
     dist = sa.attach(dist_buf)
     if e > s :
         d = func(mat[:, 1:], s, e, allowed_missing)
-        dist[s:e] = d
+        dist[(s-start):(e-start)] = d
     del mat, dist
 
 @nb.jit(nopython=True)
-def dual_dist(mat, s, e, allowed_missing=0.03):
+def dual_dist(mat, s, e, allowed_missing=0.05):
     dist = np.zeros((e-s, mat.shape[0], 2), dtype=np.int32 )
     n_loci = mat.shape[1]
     for i in range(s, e) :
