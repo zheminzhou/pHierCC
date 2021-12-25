@@ -63,8 +63,7 @@ def get_silhouette2(data) :
 def prepare_mat(profile_file) :
     mat = pd.read_csv(profile_file, sep='\t', header=None, dtype=str).values
     allele_columns = np.array([i == 0 or (not h.startswith('#')) for i, h in enumerate(mat[0])])
-    mat = mat[1:, allele_columns].astype(int)
-    mat = mat[mat.T[0]>0]
+    mat = mat[1:, allele_columns]
     return mat
 
 
@@ -88,6 +87,14 @@ def evalHCC(profile, cluster, output, stepwise, n_proc) :
     idx = { p:i for i, p in enumerate(cluster.T[0])}
     cluster_idx = sorted([ [idx.get(c, -1), i] for i, c in enumerate(profile.T[0]) if c in idx ])
     profile = profile[np.array(cluster_idx).T[1]]
+
+    cluster.T[0] = np.arange(cluster.shape[0])
+    profile.T[0] = np.arange(profile.shape[0])
+    cluster = cluster.astype(int)
+    profile = profile.astype(int)
+    cluster[cluster < 0] = 0
+    profile[profile < 0] = 0
+
     cluster = cluster[:, 1::stepwise]
 
     similarity = get_similarity(normalized_mutual_info_score, cluster, stepwise, pool)
