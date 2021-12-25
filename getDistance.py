@@ -72,10 +72,10 @@ def dual_dist(mat, s, e, allowed_missing=0.05):
     return dist
 
 @nb.jit(nopython=True)
-def p_dist(mat, s, e, allowed_missing=0.0):
+def p_dist(mat, s, e, allowed_missing=0.05):
     dist = np.zeros((e-s, mat.shape[0], 2), dtype=np.int32 )
     n_loci = mat.shape[1]
-    for i in range(s, e+1) :
+    for i in range(s, e) :
         for j in range(i) :
             ad, al = 0., 0.
             for k in range(n_loci) :

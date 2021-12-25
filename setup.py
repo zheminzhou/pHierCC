@@ -1,7 +1,7 @@
 import os, sys
 from setuptools import setup, find_packages
 
-__VERSION__ = '1.26'
+__VERSION__ = '1.27'
 
 with open('README.rst', encoding='utf-8') as f:
     long_description = f.read()

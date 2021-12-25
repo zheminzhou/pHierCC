@@ -97,8 +97,8 @@ def evalHCC(profile, cluster, output, stepwise, n_proc) :
 
     cluster = cluster[:, 1::stepwise]
 
-    similarity = get_similarity(normalized_mutual_info_score, cluster, stepwise, pool)
     silhouette = get_silhouette(profile, cluster, stepwise, pool)
+    similarity = get_similarity(normalized_mutual_info_score, cluster, stepwise, pool)
 
     with open(output+'.tsv', 'w') as fout:
         levels = ['HC{0}'.format(lvl*stepwise) for lvl in np.arange(silhouette.shape[0])]
