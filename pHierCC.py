@@ -27,7 +27,7 @@ except :
 logging.basicConfig(format='%(asctime)s | %(message)s', stream=sys.stdout, level=logging.INFO)
 
 def prepare_mat(profile_file) :
-    mat = pd.read_csv(profile_file, sep='\t', header=None, dtype=str).values
+    mat = pd.read_csv(profile_file, sep='\t', header=None, dtype=str, na_filter=False).values
     allele_columns = np.array([i == 0 or (not h.startswith('#')) for i, h in enumerate(mat[0])])
     mat = mat[1:, allele_columns]
     try :
@@ -37,6 +37,8 @@ def prepare_mat(profile_file) :
     except :
         names = mat.T[0].copy()
         mat.T[0] = np.arange(1, mat.shape[0]+1)
+        d = {tag:(0 if tag in {'', '0'} or tag.startswith('-') else idx ) for idx, tag in enumerate(np.unique(mat[:, 1:]))}
+        mat[:, 1:] = np.vectorize(d.get)(mat[:, 1:])
         mat = mat.astype(int)
     mat[mat < 0] = 0
     return mat, names
