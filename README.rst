@@ -4,7 +4,9 @@
 .. image:: https://img.shields.io/conda/vn/zhemin/phiercc.svg
    :alt: pHierCC on the Anaconda Cloud
    :target: https://anaconda.org/zhemin/phiercc
-
+.. image:: https://github.com/happykhan/pHierCC/actions/workflows/python-package.yml/badge.svg
+   :alt: pHierCC on GitHub Actions
+   :target: https://github.com/happykhan/pHierCC/actions/workflows/python-package.yml
 
 Hosted by
 
@@ -54,11 +56,9 @@ Python version
 
 pHierCC is currently supported and tested on three Python versions: 
 
-- 3.6
-- 3.7
-- 3.8 (recommended)
-
-Python 3.9 is currently NOT supported, because Numba, one of the libaries that pHierCC depends on, is not compatible with Python 3.9. This issue is expected to get resolved early 2021 according to `this thread <https://github.com/numba/numba/issues/6345>`_. 
+- 3.9
+- 3.10
+- 3.11
 
 Python libraries
 ================
