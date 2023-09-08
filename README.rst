@@ -5,6 +5,7 @@
    :alt: pHierCC on the Anaconda Cloud
    :target: https://anaconda.org/zhemin/phiercc
 
+[![tests](https://github.com/happykhan/pHierCC/actions/workflows/python-package.yml/badge.svg)](https://github.com/happykhan/pHierCC/actions/workflows/python-package.yml)
 
 Hosted by
 

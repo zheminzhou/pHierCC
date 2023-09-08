@@ -33,7 +33,7 @@ def prepare_mat(profile_file) :
     try :
         mat = mat.astype(int)
         mat = mat[mat.T[0] > 0]
-        names = mat.T[0]
+        names = mat.T[0].copy()
     except :
         names = mat.T[0].copy()
         mat.T[0] = np.arange(1, mat.shape[0]+1)
@@ -134,7 +134,7 @@ def phierCC(profile, output, append, n_proc, allowed_missing):
     with gzip.open(output + '.HierCC.gz', 'wt') as fout:
         fout.write('#ST_id\t{0}\n'.format('\t'.join(['HC' + str(id) for id in np.arange(n_loci+1)])))
         for n, r in zip(names, res):
-            fout.write('\t'.join([n] + [str(rr) for rr in r[1:]]) + '\n')
+            fout.write('\t'.join([str(n)] + [str(rr) for rr in r[1:]]) + '\n')
 
     logging.info('NPZ  clustering result (for production mode): {0}.npz'.format(output))
     logging.info('TEXT clustering result (for visual inspection and HCCeval): {0}.HierCC.gz'.format(output))
